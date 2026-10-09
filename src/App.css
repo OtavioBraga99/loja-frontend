@@ -41,3 +41,34 @@ p {
 .erro {
   color: #dc2626;
 }
+
+
+.paginacao {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 35px;
+}
+
+.paginacao button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background-color: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+
+.paginacao button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.paginacao button:disabled {
+  background-color: #a1a1aa;
+  cursor: not-allowed;
+}
+
+.paginacao span {
+  font-weight: bold;
+}
