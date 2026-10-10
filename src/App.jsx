@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import ListaProdutos from './components/ListaProdutos'
+import Carrinho from './components/Carrinho'
 import './App.css'
 
 function App() {
@@ -365,126 +366,50 @@ function App() {
 
 
       {/* CARRINHO DE COMPRAS */}
-      <section className="carrinho">
 
-        <h2>🛒 Meu Carrinho</h2>
+<Carrinho
+  carrinho={carrinho}
+  alterarQuantidade={alterarQuantidade}
+  removerDoCarrinho={removerDoCarrinho}
+  valorTotal={valorTotal}
+  formatarMoeda={formatarMoeda}
+  finalizando={finalizando}
+>
+  {carrinho.length > 0 && (
+    <div className="finalizar-pedido">
+      <h3>Finalizar compra</h3>
 
-        {carrinho.length === 0 ? (
-          <p>Seu carrinho está vazio.</p>
-        ) : (
-          <>
-            {carrinho.map(item => (
-              <div
-                className="carrinho-item"
-                key={item.id}
-              >
-                <div>
-                  <h3>{item.nome}</h3>
+      <label htmlFor="usuarioId">ID do usuário:</label>
 
-                  <p>
-                    Preço unitário: {formatarMoeda(item.preco)}
-                  </p>
+      <input
+        id="usuarioId"
+        type="number"
+        min="1"
+        step="1"
+        placeholder="Ex.: 1"
+        value={usuarioId}
+        onChange={e => setUsuarioId(e.target.value)}
+        disabled={finalizando}
+      />
 
-                  {/* CONTROLE DE QUANTIDADE */}
-                  <div className="controle-quantidade">
+      <button
+        className="btn-finalizar"
+        onClick={finalizarPedido}
+        disabled={finalizando || carrinho.length === 0}
+      >
+        {finalizando ? 'Finalizando...' : 'Finalizar pedido'}
+      </button>
+    </div>
+  )}
 
-                    <button
-                      onClick={() => alterarQuantidade(item.id, -1)}
-                      disabled={
-                        item.quantidade <= 1 || finalizando
-                      }
-                    >
-                      −
-                    </button>
+  {mensagemPedido && (
+    <p className="mensagem-sucesso">{mensagemPedido}</p>
+  )}
 
-                    <span>{item.quantidade}</span>
-
-                    <button
-                      onClick={() => alterarQuantidade(item.id, 1)}
-                      disabled={
-                        item.quantidade >= item.estoque ||
-                        finalizando
-                      }
-                    >
-                      +
-                    </button>
-
-                  </div>
-
-                  <p>
-                    Subtotal: {
-                      formatarMoeda(
-                        item.preco * item.quantidade
-                      )
-                    }
-                  </p>
-                </div>
-
-                <button
-                  className="btn-remover"
-                  onClick={() => removerDoCarrinho(item.id)}
-                  disabled={finalizando}
-                >
-                  Remover
-                </button>
-              </div>
-            ))}
-
-            <h3>
-              Total: {formatarMoeda(valorTotal)}
-            </h3>
-
-            {/* FINALIZAÇÃO DO PEDIDO */}
-            <div className="finalizar-pedido">
-
-              <h3>Finalizar compra</h3>
-
-              <label htmlFor="usuarioId">
-                ID do usuário:
-              </label>
-
-              <input
-                id="usuarioId"
-                type="number"
-                min="1"
-                step="1"
-                placeholder="Ex.: 1"
-                value={usuarioId}
-                onChange={event =>
-                  setUsuarioId(event.target.value)
-                }
-                disabled={finalizando}
-              />
-
-              <button
-                className="btn-finalizar"
-                onClick={finalizarPedido}
-                disabled={finalizando || carrinho.length === 0}
-              >
-                {finalizando
-                  ? 'Finalizando...'
-                  : 'Finalizar pedido'}
-              </button>
-
-            </div>
-          </>
-        )}
-
-        {/* MENSAGENS DA FINALIZAÇÃO */}
-        {mensagemPedido && (
-          <p className="mensagem-sucesso">
-            {mensagemPedido}
-          </p>
-        )}
-
-        {erroPedido && (
-          <p className="erro">
-            {erroPedido}
-          </p>
-        )}
-
-      </section>
-
+  {erroPedido && (
+    <p className="erro">{erroPedido}</p>
+  )}
+</Carrinho>
 
 <section className="carrinho">
   <h2>Histórico de Pedidos</h2>
