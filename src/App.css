@@ -151,3 +151,45 @@ p {
 .controle-quantidade span {
   font-weight: bold;
 }
+
+
+.finalizar-pedido {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 25px;
+  max-width: 350px;
+}
+
+.finalizar-pedido input {
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.btn-finalizar {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  background-color: #2563eb;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-finalizar:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.btn-finalizar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mensagem-sucesso {
+  color: #15803d;
+  font-weight: bold;
+  margin-top: 20px;
+}
+

@@ -16,6 +16,12 @@ function App() {
   // ESTADO DO CARRINHO
   const [carrinho, setCarrinho] = useState([])
 
+  // ESTADOS DA FINALIZAÇÃO DO PEDIDO
+  const [usuarioId, setUsuarioId] = useState('')
+  const [finalizando, setFinalizando] = useState(false)
+  const [mensagemPedido, setMensagemPedido] = useState('')
+  const [erroPedido, setErroPedido] = useState('')
+
   // BUSCAR PRODUTOS NA API SPRING BOOT
   useEffect(() => {
     const controller = new AbortController()
@@ -26,7 +32,7 @@ function App() {
 
       try {
         const resposta = await fetch(
-          `http://localhost:8080/produtos/paginados?page=${pagina}&size=6`,
+          `http://localhost:8080/produtos/paginados?page=${pagina}&size=8`,
           { signal: controller.signal }
         )
 
@@ -36,11 +42,13 @@ function App() {
 
         const dados = await resposta.json()
 
-        setProdutos(dados.content)
-        setTotalPaginas(dados.page.totalPages)
+        if (!controller.signal.aborted) {
+          setProdutos(dados.content)
+          setTotalPaginas(dados.page.totalPages)
+        }
 
       } catch (error) {
-        if (error.name !== 'AbortError') {
+        if (!controller.signal.aborted) {
           setErro(error.message)
         }
       } finally {
@@ -72,21 +80,20 @@ function App() {
 
   // ADICIONAR PRODUTO AO CARRINHO
   function adicionarAoCarrinho(produto) {
+    setMensagemPedido('')
+    setErroPedido('')
 
     setCarrinho(carrinhoAtual => {
-
       const produtoExistente = carrinhoAtual.find(
         item => item.id === produto.id
       )
 
       const quantidadeAtual = produtoExistente?.quantidade ?? 0
 
-      // Verifica o estoque disponível
       if (quantidadeAtual >= produto.quantidade) {
         return carrinhoAtual
       }
 
-      // Produto já existe no carrinho
       if (produtoExistente) {
         return carrinhoAtual.map(item =>
           item.id === produto.id
@@ -99,7 +106,6 @@ function App() {
         )
       }
 
-      // Adiciona um novo produto ao carrinho
       return [
         ...carrinhoAtual,
         {
@@ -122,23 +128,15 @@ function App() {
 
   // ALTERAR QUANTIDADE DO PRODUTO
   function alterarQuantidade(produtoId, diferenca) {
-
     setCarrinho(carrinhoAtual =>
       carrinhoAtual.map(item => {
-
         if (item.id !== produtoId) {
           return item
         }
 
         const novaQuantidade = item.quantidade + diferenca
 
-        // Quantidade mínima permitida
-        if (novaQuantidade < 1) {
-          return item
-        }
-
-        // Não permite ultrapassar o estoque
-        if (novaQuantidade > item.estoque) {
+        if (novaQuantidade < 1 || novaQuantidade > item.estoque) {
           return item
         }
 
@@ -168,6 +166,101 @@ function App() {
       style: 'currency',
       currency: 'BRL'
     })
+  }
+
+  // FINALIZAR PEDIDO NO SPRING BOOT
+  async function finalizarPedido() {
+
+    if (finalizando) {
+      return
+    }
+
+    if (carrinho.length === 0) {
+      setErroPedido('Adicione produtos ao carrinho.')
+      return
+    }
+
+    if (
+      usuarioId.trim() === '' ||
+      !Number.isSafeInteger(Number(usuarioId)) ||
+      Number(usuarioId) <= 0
+    ) {
+      setErroPedido('Informe um ID de usuário válido.')
+      return
+    }
+
+    setFinalizando(true)
+    setMensagemPedido('')
+    setErroPedido('')
+
+    const pedido = {
+      usuarioId: Number(usuarioId),
+      itens: carrinho.map(item => ({
+        produtoId: item.id,
+        quantidade: item.quantidade
+      }))
+    }
+
+    let pedidoCriado = null
+
+    try {
+      const resposta = await fetch(
+        'http://localhost:8080/pedidos',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(pedido)
+        }
+      )
+
+      if (!resposta.ok) {
+        const dadosErro = await resposta.json().catch(() => null)
+
+        throw new Error(
+          dadosErro?.message ||
+          dadosErro?.mensagem ||
+          'Não foi possível finalizar o pedido.'
+        )
+      }
+
+      pedidoCriado = await resposta.json()
+
+      setMensagemPedido(
+        `Pedido #${pedidoCriado.id} criado com sucesso!`
+      )
+
+      setCarrinho([])
+
+    } catch (error) {
+      setErroPedido(
+        error.message || 'Erro ao finalizar pedido.'
+      )
+    } finally {
+      setFinalizando(false)
+    }
+
+    // Atualiza o catálogo somente após a compra confirmada
+    if (pedidoCriado) {
+      try {
+        const resposta = await fetch(
+          `http://localhost:8080/produtos/paginados?page=${pagina}&size=5`
+        )
+
+        if (resposta.ok) {
+          const dados = await resposta.json()
+
+          setProdutos(dados.content)
+          setTotalPaginas(dados.page.totalPages)
+        }
+      } catch (error) {
+        console.error(
+          'Pedido criado, mas não foi possível atualizar o catálogo:',
+          error
+        )
+      }
+    }
   }
 
   return (
@@ -214,7 +307,6 @@ function App() {
                   className="produto-card"
                   key={produto.id}
                 >
-
                   <h3>{produto.nome}</h3>
 
                   <p>
@@ -228,13 +320,12 @@ function App() {
                   <button
                     className="btn-adicionar"
                     onClick={() => adicionarAoCarrinho(produto)}
-                    disabled={semEstoque}
+                    disabled={semEstoque || finalizando}
                   >
                     {semEstoque
                       ? 'Indisponível'
                       : 'Adicionar ao carrinho'}
                   </button>
-
                 </div>
               )
             })}
@@ -247,7 +338,7 @@ function App() {
 
               <button
                 onClick={paginaAnterior}
-                disabled={pagina === 0}
+                disabled={pagina === 0 || finalizando}
               >
                 Anterior
               </button>
@@ -258,7 +349,9 @@ function App() {
 
               <button
                 onClick={proximaPagina}
-                disabled={pagina >= totalPaginas - 1}
+                disabled={
+                  pagina >= totalPaginas - 1 || finalizando
+                }
               >
                 Próxima
               </button>
@@ -277,13 +370,11 @@ function App() {
           <p>Seu carrinho está vazio.</p>
         ) : (
           <>
-
             {carrinho.map(item => (
               <div
                 className="carrinho-item"
                 key={item.id}
               >
-
                 <div>
                   <h3>{item.nome}</h3>
 
@@ -296,7 +387,9 @@ function App() {
 
                     <button
                       onClick={() => alterarQuantidade(item.id, -1)}
-                      disabled={item.quantidade <= 1}
+                      disabled={
+                        item.quantidade <= 1 || finalizando
+                      }
                     >
                       −
                     </button>
@@ -305,7 +398,10 @@ function App() {
 
                     <button
                       onClick={() => alterarQuantidade(item.id, 1)}
-                      disabled={item.quantidade >= item.estoque}
+                      disabled={
+                        item.quantidade >= item.estoque ||
+                        finalizando
+                      }
                     >
                       +
                     </button>
@@ -319,16 +415,15 @@ function App() {
                       )
                     }
                   </p>
-
                 </div>
 
                 <button
                   className="btn-remover"
                   onClick={() => removerDoCarrinho(item.id)}
+                  disabled={finalizando}
                 >
                   Remover
                 </button>
-
               </div>
             ))}
 
@@ -336,7 +431,53 @@ function App() {
               Total: {formatarMoeda(valorTotal)}
             </h3>
 
+            {/* FINALIZAÇÃO DO PEDIDO */}
+            <div className="finalizar-pedido">
+
+              <h3>Finalizar compra</h3>
+
+              <label htmlFor="usuarioId">
+                ID do usuário:
+              </label>
+
+              <input
+                id="usuarioId"
+                type="number"
+                min="1"
+                step="1"
+                placeholder="Ex.: 1"
+                value={usuarioId}
+                onChange={event =>
+                  setUsuarioId(event.target.value)
+                }
+                disabled={finalizando}
+              />
+
+              <button
+                className="btn-finalizar"
+                onClick={finalizarPedido}
+                disabled={finalizando || carrinho.length === 0}
+              >
+                {finalizando
+                  ? 'Finalizando...'
+                  : 'Finalizar pedido'}
+              </button>
+
+            </div>
           </>
+        )}
+
+        {/* MENSAGENS DA FINALIZAÇÃO */}
+        {mensagemPedido && (
+          <p className="mensagem-sucesso">
+            {mensagemPedido}
+          </p>
+        )}
+
+        {erroPedido && (
+          <p className="erro">
+            {erroPedido}
+          </p>
         )}
 
       </section>
