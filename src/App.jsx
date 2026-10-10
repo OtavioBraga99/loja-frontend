@@ -26,7 +26,7 @@ function App() {
 
       try {
         const resposta = await fetch(
-          `http://localhost:8080/produtos/paginados?page=${pagina}&size=5`,
+          `http://localhost:8080/produtos/paginados?page=${pagina}&size=6`,
           { signal: controller.signal }
         )
 
