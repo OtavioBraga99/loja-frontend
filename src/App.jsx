@@ -16,7 +16,7 @@ function App() {
   // ESTADO DO CARRINHO
   const [carrinho, setCarrinho] = useState([])
 
-  // BUSCAR PRODUTOS NO SPRING BOOT
+  // BUSCAR PRODUTOS NA API SPRING BOOT
   useEffect(() => {
     const controller = new AbortController()
 
@@ -81,31 +81,33 @@ function App() {
 
       const quantidadeAtual = produtoExistente?.quantidade ?? 0
 
-      // Não permite ultrapassar o estoque
+      // Verifica o estoque disponível
       if (quantidadeAtual >= produto.quantidade) {
         return carrinhoAtual
       }
 
-      // Se o produto já existe, aumenta a quantidade
+      // Produto já existe no carrinho
       if (produtoExistente) {
         return carrinhoAtual.map(item =>
           item.id === produto.id
             ? {
                 ...item,
+                estoque: produto.quantidade,
                 quantidade: item.quantidade + 1
               }
             : item
         )
       }
 
-      // Se o produto ainda não existe, adiciona
+      // Adiciona um novo produto ao carrinho
       return [
         ...carrinhoAtual,
         {
           id: produto.id,
           nome: produto.nome,
           preco: Number(produto.preco),
-          quantidade: 1
+          quantidade: 1,
+          estoque: produto.quantidade
         }
       ]
     })
@@ -115,6 +117,36 @@ function App() {
   function removerDoCarrinho(produtoId) {
     setCarrinho(carrinhoAtual =>
       carrinhoAtual.filter(item => item.id !== produtoId)
+    )
+  }
+
+  // ALTERAR QUANTIDADE DO PRODUTO
+  function alterarQuantidade(produtoId, diferenca) {
+
+    setCarrinho(carrinhoAtual =>
+      carrinhoAtual.map(item => {
+
+        if (item.id !== produtoId) {
+          return item
+        }
+
+        const novaQuantidade = item.quantidade + diferenca
+
+        // Quantidade mínima permitida
+        if (novaQuantidade < 1) {
+          return item
+        }
+
+        // Não permite ultrapassar o estoque
+        if (novaQuantidade > item.estoque) {
+          return item
+        }
+
+        return {
+          ...item,
+          quantidade: novaQuantidade
+        }
+      })
     )
   }
 
@@ -143,11 +175,12 @@ function App() {
 
       {/* CABEÇALHO */}
       <h1>Minha Loja</h1>
+
       <p>Bem-vindo à nossa loja virtual!</p>
 
       <p>🛒 Carrinho: {quantidadeItens} itens</p>
 
-      {/* PRODUTOS */}
+      {/* LISTAGEM DE PRODUTOS */}
       <h2>Produtos disponíveis</h2>
 
       {carregando && (
@@ -181,6 +214,7 @@ function App() {
                   className="produto-card"
                   key={produto.id}
                 >
+
                   <h3>{produto.nome}</h3>
 
                   <p>
@@ -234,7 +268,7 @@ function App() {
         </>
       )}
 
-      {/* CARRINHO */}
+      {/* CARRINHO DE COMPRAS */}
       <section className="carrinho">
 
         <h2>🛒 Meu Carrinho</h2>
@@ -243,21 +277,40 @@ function App() {
           <p>Seu carrinho está vazio.</p>
         ) : (
           <>
+
             {carrinho.map(item => (
               <div
                 className="carrinho-item"
                 key={item.id}
               >
+
                 <div>
                   <h3>{item.nome}</h3>
 
                   <p>
-                    Quantidade: {item.quantidade}
-                  </p>
-
-                  <p>
                     Preço unitário: {formatarMoeda(item.preco)}
                   </p>
+
+                  {/* CONTROLE DE QUANTIDADE */}
+                  <div className="controle-quantidade">
+
+                    <button
+                      onClick={() => alterarQuantidade(item.id, -1)}
+                      disabled={item.quantidade <= 1}
+                    >
+                      −
+                    </button>
+
+                    <span>{item.quantidade}</span>
+
+                    <button
+                      onClick={() => alterarQuantidade(item.id, 1)}
+                      disabled={item.quantidade >= item.estoque}
+                    >
+                      +
+                    </button>
+
+                  </div>
 
                   <p>
                     Subtotal: {
@@ -266,6 +319,7 @@ function App() {
                       )
                     }
                   </p>
+
                 </div>
 
                 <button

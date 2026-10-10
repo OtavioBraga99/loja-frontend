@@ -127,3 +127,27 @@ p {
 .btn-remover:hover {
   background-color: #b91c1c;
 }
+
+.controle-quantidade {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0;
+}
+
+.controle-quantidade button {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #f3f4f6;
+  cursor: pointer;
+}
+
+.controle-quantidade button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.controle-quantidade span {
+  font-weight: bold;
+}
