@@ -1,5 +1,5 @@
-
 import { useEffect, useState } from 'react'
+import ListaProdutos from './components/ListaProdutos'
 import './App.css'
 
 function App() {
@@ -284,7 +284,7 @@ function App() {
     if (pedidoCriado) {
       try {
         const resposta = await fetch(
-          `http://localhost:8080/produtos/paginados?page=${pagina}&size=5`
+          `http://localhost:8080/produtos/paginados?page=${pagina}&size=8`
         )
 
         if (resposta.ok) {
@@ -312,93 +312,57 @@ function App() {
 
       <p>🛒 Carrinho: {quantidadeItens} itens</p>
 
-      {/* LISTAGEM DE PRODUTOS */}
-      <h2>Produtos disponíveis</h2>
 
-      {carregando && (
-        <p>Carregando produtos...</p>
-      )}
+{/* LISTAGEM DE PRODUTOS */}
+<h2>Produtos disponíveis</h2>
 
-      {erro && (
-        <p className="erro">{erro}</p>
-      )}
+{carregando && (
+  <p>Carregando produtos...</p>
+)}
 
-      {!carregando && !erro && produtos.length === 0 && (
-        <p>Nenhum produto cadastrado.</p>
-      )}
+{erro && (
+  <p className="erro">{erro}</p>
+)}
 
-      {!carregando && !erro && (
-        <>
-          <div className="produtos">
+{!carregando && !erro && produtos.length === 0 && (
+  <p>Nenhum produto cadastrado.</p>
+)}
 
-            {produtos.map(produto => {
+{!carregando && !erro && (
+  <>
+    <ListaProdutos
+          produtos={produtos}
+          carrinho={carrinho}
+          adicionarAoCarrinho={adicionarAoCarrinho}
+          finalizando={finalizando}
+          formatarMoeda={formatarMoeda}
+        />
 
-              const quantidadeNoCarrinho =
-                carrinho.find(item => item.id === produto.id)
-                  ?.quantidade ?? 0
+    {/* PAGINAÇÃO */}
+    {totalPaginas > 0 && (
+      <div className="paginacao">
+        <button
+          onClick={paginaAnterior}
+          disabled={pagina === 0 || finalizando}
+        >
+          Anterior
+        </button>
 
-              const semEstoque =
-                produto.quantidade <= 0 ||
-                quantidadeNoCarrinho >= produto.quantidade
+        <span>
+          Página {pagina + 1} de {totalPaginas}
+        </span>
 
-              return (
-                <div
-                  className="produto-card"
-                  key={produto.id}
-                >
-                  <h3>{produto.nome}</h3>
+        <button
+          onClick={proximaPagina}
+          disabled={pagina >= totalPaginas - 1 || finalizando}
+        >
+          Próxima
+        </button>
+      </div>
+    )}
+  </>
+)}
 
-                  <p>
-                    Preço: {formatarMoeda(produto.preco)}
-                  </p>
-
-                  <p>
-                    Estoque: {produto.quantidade}
-                  </p>
-
-                  <button
-                    className="btn-adicionar"
-                    onClick={() => adicionarAoCarrinho(produto)}
-                    disabled={semEstoque || finalizando}
-                  >
-                    {semEstoque
-                      ? 'Indisponível'
-                      : 'Adicionar ao carrinho'}
-                  </button>
-                </div>
-              )
-            })}
-
-          </div>
-
-          {/* PAGINAÇÃO */}
-          {totalPaginas > 0 && (
-            <div className="paginacao">
-
-              <button
-                onClick={paginaAnterior}
-                disabled={pagina === 0 || finalizando}
-              >
-                Anterior
-              </button>
-
-              <span>
-                Página {pagina + 1} de {totalPaginas}
-              </span>
-
-              <button
-                onClick={proximaPagina}
-                disabled={
-                  pagina >= totalPaginas - 1 || finalizando
-                }
-              >
-                Próxima
-              </button>
-
-            </div>
-          )}
-        </>
-      )}
 
       {/* CARRINHO DE COMPRAS */}
       <section className="carrinho">
@@ -578,7 +542,6 @@ function App() {
     </div>
   ))}
 </section>
-
 
     </div>
   )
