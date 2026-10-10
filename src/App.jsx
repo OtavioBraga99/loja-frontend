@@ -21,6 +21,45 @@ function App() {
   const [finalizando, setFinalizando] = useState(false)
   const [mensagemPedido, setMensagemPedido] = useState('')
   const [erroPedido, setErroPedido] = useState('')
+  const [historico, setHistorico] = useState([])
+  const [carregandoHistorico, setCarregandoHistorico] = useState(false)
+  const [erroHistorico, setErroHistorico] = useState('')
+
+  // CONSULTAR PEDIDOS
+  async function buscarHistorico() {
+    if (
+      usuarioId.trim() === '' ||
+      !Number.isSafeInteger(Number(usuarioId)) ||
+      Number(usuarioId) <= 0
+    ) {
+      setErroHistorico('Informe um ID de usuário válido.')
+      setHistorico([])
+      return
+    }
+
+    setCarregandoHistorico(true)
+    setErroHistorico('')
+    setHistorico([])
+
+    try {
+      const resposta = await fetch(
+        `http://localhost:8080/pedidos/usuario/${usuarioId}`
+      )
+
+      if (!resposta.ok) {
+        throw new Error('Não foi possível buscar o histórico.')
+      }
+
+      const dados = await resposta.json()
+
+      setHistorico(dados)
+
+    } catch (error) {
+      setErroHistorico(error.message)
+    } finally {
+      setCarregandoHistorico(false)
+    }
+  }
 
   // BUSCAR PRODUTOS NA API SPRING BOOT
   useEffect(() => {
@@ -481,6 +520,65 @@ function App() {
         )}
 
       </section>
+
+
+<section className="carrinho">
+  <h2>Histórico de Pedidos</h2>
+
+  <p>Consulte os pedidos do usuário informado acima.</p>
+
+  <button
+    className="btn-finalizar"
+    onClick={buscarHistorico}
+    disabled={carregandoHistorico}
+  >
+    {carregandoHistorico
+      ? 'Buscando...'
+      : 'Buscar histórico'}
+  </button>
+
+  {erroHistorico && (
+    <p className="erro">{erroHistorico}</p>
+  )}
+
+  {!carregandoHistorico &&
+    !erroHistorico &&
+    historico.length === 0 && (
+      <p>Nenhum pedido carregado.</p>
+    )}
+
+  {historico.map(pedido => (
+    <div className="carrinho-item" key={pedido.id}>
+      <div>
+        <h3>Pedido #{pedido.id}</h3>
+
+        <p>Status: {pedido.status}</p>
+
+        <p>
+          Data: {
+            new Date(pedido.dataPedido)
+              .toLocaleString('pt-BR')
+          }
+        </p>
+
+        {pedido.itens.map(item => (
+          <p key={item.produtoId}>
+            {item.quantidade} × {item.nomeProduto}
+            {' — '}
+            {formatarMoeda(
+              item.precoUnitario * item.quantidade
+            )}
+          </p>
+        ))}
+
+        <strong>
+          Total: {formatarMoeda(pedido.total)}
+        </strong>
+      </div>
+    </div>
+  ))}
+</section>
+
 
     </div>
   )
