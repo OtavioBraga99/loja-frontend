@@ -22,12 +22,16 @@ function App() {
 
   // ESTADOS DA FINALIZAÇÃO DO PEDIDO
   const [usuarioId, setUsuarioId] = useState('')
+  const [usuarios, setUsuarios] = useState([])
+  const [carregandoUsuarios, setCarregandoUsuarios] = useState(false)
+  const [erroUsuarios, setErroUsuarios] = useState('')
   const [finalizando, setFinalizando] = useState(false)
   const [mensagemPedido, setMensagemPedido] = useState('')
   const [erroPedido, setErroPedido] = useState('')
   const [historico, setHistorico] = useState([])
   const [carregandoHistorico, setCarregandoHistorico] = useState(false)
   const [erroHistorico, setErroHistorico] = useState('')
+  const [atualizacaoUsuarios, setAtualizacaoUsuarios] = useState(0)
 
   // CONSULTAR PEDIDOS
   async function buscarHistorico() {
@@ -62,6 +66,27 @@ function App() {
       setErroHistorico(error.message)
     } finally {
       setCarregandoHistorico(false)
+    }
+  }
+
+  async function buscarUsuariosCheckout() {
+    setCarregandoUsuarios(true)
+    setErroUsuarios('')
+
+    try {
+      const resposta = await fetch('http://localhost:8080/usuarios')
+
+      if (!resposta.ok) { 
+        throw new Error ('Não foi possível carregar os usuários.')
+      }
+
+      const dados = await resposta.json()
+      setUsuarios(dados)
+    
+    } catch (error) {
+      setErroUsuarios(error.message)
+    } finally {
+      setCarregandoUsuarios(false)
     }
   }
 
@@ -314,8 +339,14 @@ function App() {
 
       <p>Bem-vindo à nossa loja virtual!</p>
 
-      <CadastroUsuario />
-      <ListaUsuarios/>
+      <CadastroUsuario 
+        onUsuarioCadastrado={() => {
+          setAtualizacaoUsuarios(valorAtual => valorAtual + 1)
+        }}
+      />
+      <ListaUsuarios
+        atualizacaoUsuarios={atualizacaoUsuarios}
+      />
 
       <p>🛒 Carrinho: {quantidadeItens} itens</p>
 
@@ -385,18 +416,34 @@ function App() {
     <div className="finalizar-pedido">
       <h3>Finalizar compra</h3>
 
-      <label htmlFor="usuarioId">ID do usuário:</label>
+      <label htmlFor="usuarioId">Selecione o usuário:</label>
 
-      <input
+      <select 
         id="usuarioId"
-        type="number"
-        min="1"
-        step="1"
-        placeholder="Ex.: 1"
         value={usuarioId}
         onChange={e => setUsuarioId(e.target.value)}
-        disabled={finalizando}
-      />
+        disabled={finalizando || carregandoUsuarios}
+        >
+          <option value="">Selecione um usuário</option>
+
+          {usuarios.map(usuario =>(
+            <option key={usuario.id} value={usuario.id}>
+              {usuario.nome} - ID: {usuario.id}
+            </option>
+          ))}
+      </select>
+
+      <button 
+        type="button"
+        onClick={buscarUsuariosCheckout}
+          disabled={carregandoUsuarios || finalizando}
+        >
+          {carregandoUsuarios ? 'Carregando...' : 'Carregar usuários'}
+      </button>
+
+      {erroUsuarios && (
+        <p className="erro">{erroUsuarios}</p>
+      )}
 
       <button
         className="btn-finalizar"
