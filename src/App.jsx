@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import ListaProdutos from './components/ListaProdutos'
 import Carrinho from './components/Carrinho'
 import HistoricoPedidos from './components/HistoricoPedidos'
+import CadastroUsuario from './components/CadastroUsuario'
 import './App.css'
 
 function App() {
@@ -311,6 +312,8 @@ function App() {
       <h1>Minha Loja</h1>
 
       <p>Bem-vindo à nossa loja virtual!</p>
+
+      <CadastroUsuario />
 
       <p>🛒 Carrinho: {quantidadeItens} itens</p>
 
