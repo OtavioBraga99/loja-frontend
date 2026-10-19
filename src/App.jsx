@@ -3,6 +3,7 @@ import ListaProdutos from './components/ListaProdutos'
 import Carrinho from './components/Carrinho'
 import HistoricoPedidos from './components/HistoricoPedidos'
 import CadastroUsuario from './components/CadastroUsuario'
+import ListaUsuarios from './components/ListaUsuarios'
 import './App.css'
 
 function App() {
@@ -314,6 +315,7 @@ function App() {
       <p>Bem-vindo à nossa loja virtual!</p>
 
       <CadastroUsuario />
+      <ListaUsuarios/>
 
       <p>🛒 Carrinho: {quantidadeItens} itens</p>
 
