@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from 'react';
 
-function ListaUsuarios(){
+function ListaUsuarios({ atualizacaoUsuarios }){
     const [usuarios, setUsuarios] = useState([])
     const [carregando, setCarregando] = useState(false)
     const [erro, setErro] = useState('')
@@ -26,6 +26,42 @@ function ListaUsuarios(){
             setCarregando(false)
         }
     }
+
+    useEffect(() => {
+        if(atualizacaoUsuarios === 0) {
+            return
+        }
+
+        let ativo = true 
+
+        async function atualizarUsuarios() {
+            try {
+                const resposta = await fetch('http://localhost:8080/usuarios')
+
+                if (!resposta.ok) {
+                    throw new Error('Não foi possível atualizar os usuários.')
+                }
+
+                const dados = await resposta.json()
+
+                if (ativo) {
+                    setUsuarios(dados)
+                    setErro('')
+                }
+        
+            } catch (error) {
+                if (ativo) {
+                    setErro(error.message)
+                }
+            }
+        }   
+        
+        atualizarUsuarios()
+
+        return () => {
+            ativo = false
+        }
+    }, [atualizacaoUsuarios])
 
     return (
         <section className="carrinho">
