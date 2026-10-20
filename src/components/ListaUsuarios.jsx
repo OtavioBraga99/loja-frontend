@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { listarUsuarios } from '../services/usuarioService'
 
 function ListaUsuarios({ atualizacaoUsuarios }){
     const [usuarios, setUsuarios] = useState([])
@@ -10,16 +11,8 @@ function ListaUsuarios({ atualizacaoUsuarios }){
         setErro('')
 
         try {
-            const resposta = await fetch('http://localhost:8080/usuarios')
-
-            if (!resposta) {
-                throw new Error('Não foi possível buscar os usuários.')
-            }
-
-            const dados = await resposta.json()
-
+          const dados = await listarUsuarios()
             setUsuarios(dados)
-
         } catch (error) {
             setErro(error.message)
         } finally {
@@ -36,13 +29,7 @@ function ListaUsuarios({ atualizacaoUsuarios }){
 
         async function atualizarUsuarios() {
             try {
-                const resposta = await fetch('http://localhost:8080/usuarios')
-
-                if (!resposta.ok) {
-                    throw new Error('Não foi possível atualizar os usuários.')
-                }
-
-                const dados = await resposta.json()
+                const dados = await listarUsuarios()
 
                 if (ativo) {
                     setUsuarios(dados)

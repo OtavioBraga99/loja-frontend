@@ -4,6 +4,7 @@ import Carrinho from './components/Carrinho'
 import HistoricoPedidos from './components/HistoricoPedidos'
 import CadastroUsuario from './components/CadastroUsuario'
 import ListaUsuarios from './components/ListaUsuarios'
+import { listarUsuarios } from './services/usuarioService'
 import './App.css'
 
 function App() {
@@ -74,13 +75,7 @@ function App() {
     setErroUsuarios('')
 
     try {
-      const resposta = await fetch('http://localhost:8080/usuarios')
-
-      if (!resposta.ok) { 
-        throw new Error ('Não foi possível carregar os usuários.')
-      }
-
-      const dados = await resposta.json()
+      const dados = await listarUsuarios()
       setUsuarios(dados)
     
     } catch (error) {
@@ -345,7 +340,7 @@ function App() {
       <CadastroUsuario 
         onUsuarioCadastrado={() => {
           console.log('Cadastro concluído! Atualizando usuários...')
-          
+
           setAtualizacaoUsuarios(valorAtual => valorAtual + 1)
 
           if (carrinho.length > 0){
