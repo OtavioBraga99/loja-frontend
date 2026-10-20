@@ -83,7 +83,7 @@ function ListaUsuarios({ atualizacaoUsuarios }){
             )}
 
             {usuarios.map(usuario => (
-                <div className="carrinho-item" key={usuarios.id}>
+                <div className="carrinho-item" key={usuario.id}>
                     <div>
                         <h3>{usuario.nome}</h3>
                         <p>ID: {usuario.id}</p>

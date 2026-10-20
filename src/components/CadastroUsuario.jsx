@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-function CadastroUsuario() {
+function CadastroUsuario({ onUsuarioCadastrado }) {
 
     const [nome, setNome] = useState('')
     const [email, setEmail] = useState('')
@@ -40,6 +40,10 @@ function CadastroUsuario() {
 
             setNome('')
             setEmail('')
+
+            if (onUsuarioCadastrado){
+                onUsuarioCadastrado()
+            }
 
         } catch (error) {
             setErro(error.message)

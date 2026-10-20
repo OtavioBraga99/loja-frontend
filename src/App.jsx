@@ -344,7 +344,14 @@ function App() {
 
       <CadastroUsuario 
         onUsuarioCadastrado={() => {
+          console.log('Cadastro concluído! Atualizando usuários...')
+          
           setAtualizacaoUsuarios(valorAtual => valorAtual + 1)
+
+          if (carrinho.length > 0){
+            console.log('Atualizando usuário do checkout')
+            buscarUsuariosCheckout()
+          }
         }}
       />
       <ListaUsuarios
