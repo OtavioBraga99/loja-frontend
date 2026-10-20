@@ -148,6 +148,9 @@ function App() {
 
   // ADICIONAR PRODUTO AO CARRINHO
   function adicionarAoCarrinho(produto) {
+    if (carrinho.length === 0) {
+      buscarUsuariosCheckout()
+    }
     setMensagemPedido('')
     setErroPedido('')
 
