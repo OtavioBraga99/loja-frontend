@@ -5,6 +5,8 @@ import HistoricoPedidos from './components/HistoricoPedidos'
 import CadastroUsuario from './components/CadastroUsuario'
 import ListaUsuarios from './components/ListaUsuarios'
 import { listarUsuarios } from './services/usuarioService'
+import { listarProdutosPaginados } from './services/produtoService'
+import { criarPedido, listarPedidoPorUsuario } from './services/pedidoService'
 import './App.css'
 
 function App() {
@@ -51,15 +53,7 @@ function App() {
     setHistorico([])
 
     try {
-      const resposta = await fetch(
-        `http://localhost:8080/pedidos/usuario/${usuarioId}`
-      )
-
-      if (!resposta.ok) {
-        throw new Error('Não foi possível buscar o histórico.')
-      }
-
-      const dados = await resposta.json()
+      const dados = await listarPedidoPorUsuario(usuarioId)
 
       setHistorico(dados)
 
@@ -94,16 +88,11 @@ function App() {
       setErro('')
 
       try {
-        const resposta = await fetch(
-          `http://localhost:8080/produtos/paginados?page=${pagina}&size=8`,
-          { signal: controller.signal }
+        const dados = await listarProdutosPaginados(
+          pagina, 
+          8,
+          controller.signal
         )
-
-        if (!resposta.ok) {
-          throw new Error('Erro ao buscar produtos')
-        }
-
-        const dados = await resposta.json()
 
         if (!controller.signal.aborted) {
           setProdutos(dados.content)
@@ -270,36 +259,17 @@ function App() {
     let pedidoCriado = null
 
     try {
-      const resposta = await fetch(
-        'http://localhost:8080/pedidos',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(pedido)
-        }
-      )
 
-      if (!resposta.ok) {
-        const dadosErro = await resposta.json().catch(() => null)
-
-        throw new Error(
-          dadosErro?.message ||
-          dadosErro?.mensagem ||
-          'Não foi possível finalizar o pedido.'
-        )
-      }
-
-      pedidoCriado = await resposta.json()
+      pedidoCriado = await criarPedido(pedido)
 
       setMensagemPedido(
         `Pedido #${pedidoCriado.id} criado com sucesso!`
       )
 
       setCarrinho([])
-
-    } catch (error) {
+    }
+    
+    catch (error) {
       setErroPedido(
         error.message || 'Erro ao finalizar pedido.'
       )
@@ -310,16 +280,11 @@ function App() {
     // Atualiza o catálogo somente após a compra confirmada
     if (pedidoCriado) {
       try {
-        const resposta = await fetch(
-          `http://localhost:8080/produtos/paginados?page=${pagina}&size=8`
-        )
-
-        if (resposta.ok) {
-          const dados = await resposta.json()
+        const dados = await listarProdutosPaginados(pagina, 8)
 
           setProdutos(dados.content)
           setTotalPaginas(dados.page.totalPages)
-        }
+
       } catch (error) {
         console.error(
           'Pedido criado, mas não foi possível atualizar o catálogo:',
