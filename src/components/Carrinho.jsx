@@ -1,4 +1,3 @@
-
 function Carrinho({
   carrinho,
   alterarQuantidade,

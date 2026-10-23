@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { cadastrarUsuario } from '../services/usuarioService'
 
 function CadastroUsuario({ onUsuarioCadastrado }) {
 
@@ -8,7 +9,7 @@ function CadastroUsuario({ onUsuarioCadastrado }) {
     const [mensagem, setMensagem] = useState('')
     const [erro, setErro] = useState('')
 
-    async function cadastrarUsuario() {
+    async function realizarCadastro() {
         if(nome.trim() === '' || email.trim() === '') {
             setErro('Preencha todos os campos.')
             return
@@ -19,22 +20,7 @@ function CadastroUsuario({ onUsuarioCadastrado }) {
         setErro('')
 
         try {
-            const resposta = await fetch('http://localhost:8080/usuarios', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                nome: nome,
-                email: email
-              })
-            })
-
-            if (!resposta.ok) {
-                throw new Error('Não foi possível cadastrar o usuário.')
-            }
-
-            const usuario = await resposta.json()
+            const usuario = await cadastrarUsuario(nome, email)
 
             setMensagem(`Usuário cadastrado com sucesso! ID: ${usuario.id}`)
 
@@ -82,7 +68,7 @@ function CadastroUsuario({ onUsuarioCadastrado }) {
                 <button
                 className="btn-finalizar"
                     type="button"
-                    onClick={cadastrarUsuario}
+                    onClick={realizarCadastro}
                     disabled={cadastrando}
                     >
                     {cadastrando ? 'Cadastrando...' : 'Cadastrar'}
